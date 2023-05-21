@@ -219,12 +219,15 @@ inquirer.prompt( questions )
          }
       );
 
-      const fileName = `${ items[ 0 ].job }_LV${ answers.level }.json`;
+      const fileName = `${ items[ 0 ].job }_LV${ answers.level }`;
+      const timestamp = Math.floor( Date.now() / 1000 );
+      const fileNameFull = `${ fileName }_${ timestamp }.json`;
+
       console.log( "Saving json..." );
-      writeFile( fileName, itemsFormatted, ( err ) =>
+      writeFile( fileNameFull, itemsFormatted, ( err ) =>
       {
          if ( err ) throw err;
-         console.log( `File saved to ${ fileName }.` );
+         console.log( `File saved to ${ fileNameFull }.` );
       } );
    } )
    .catch( ( error ) =>
