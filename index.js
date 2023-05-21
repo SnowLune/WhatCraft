@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import inquirer from "inquirer";
 import prettier from "prettier";
+import cliProgress from "cli-progress";
 import { parse } from "json2csv";
 import { writeFile } from "node:fs";
 
@@ -41,17 +42,17 @@ async function getSalesHistory ( world, items )
    let url = universalisAPI_base + universalisAPI_salesHistory.replace( "{worldDcRegion}", world ).replace( "{itemIds}", items.join( "," ) );
    let res = await fetch( url );
    let sales = await res.json();
-   // console.dir( sales );
    return sales;
 };
 
-async function getRecipeItems ( classJob, jobLevel )
+async function getCraftableItems ( classJob, jobLevel )
 {
    // Generate the column info for recipe ingredients
    function generateIngredientColString ()
    {
       const amountString = "AmountIngredient";
       const ingredientIDString = "ItemIngredient0TargetID";
+      const ingredientNameString = "ItemIngredient0.Name";
 
       let ingredientColumns = [];
 
@@ -59,6 +60,7 @@ async function getRecipeItems ( classJob, jobLevel )
       {
          ingredientColumns.push( amountString + i );
          ingredientColumns.push( ingredientIDString.replace( "0", i ) );
+         ingredientColumns.push( ingredientNameString.replace( "0", i ) );
       }
       return ingredientColumns;
    }
@@ -79,6 +81,7 @@ async function getRecipeItems ( classJob, jobLevel )
       "RecipeLevelTable.ClassJobLevel",
       "ClassJob.NameEnglish",
       "ClassJob.Abbreviation",
+      "ItemResult.IsUntradable",
       ...generateIngredientColString()
    ];
 
@@ -86,23 +89,74 @@ async function getRecipeItems ( classJob, jobLevel )
       `${ xivAPI_base }${ searchPrefix }${ filterPrefix }`
       + `${ filters.join( "," ) }${ columnsPrefix }${ columns.join( "," ) }`;
 
-   console.log( searchURL );
+   console.log( "Fetching craftable items..." );
+
+   const progBar = new cliProgress.SingleBar( {}, cliProgress.Presets.shades_classic );
+   progBar.start( 1, 0 );
 
    const res = await fetch( searchURL );
    const data = await res.json();
    let dataPages = [ data ];
    let pageTotal = data.Pagination.PageTotal;
+
+   progBar.update( 1 );
    if ( pageTotal > 1 )
    {
+      progBar.start( pageTotal, 1 );
       // Next page to get is 2
       for ( let i = 2; i <= pageTotal; i++ )
       {
          const res = await fetch( searchURL + `&page=${ i }` );
          const data = await res.json();
          dataPages.push( data );
+         progBar.update( i );
       }
    }
+   progBar.stop();
    return dataPages;
+}
+
+// Clean and restructure raw items data into a more easily usable format
+function raw2Clean ( rawItemsData )
+{
+   class craftableItem
+   {
+      constructor ( rawItem )
+      {
+         this.name = rawItem.Name;
+         this.recipeLevel = rawItem.RecipeLevelTable.ClassJobLevel;
+         this.id = rawItem.ItemResultTargetID;
+         this.job = rawItem.ClassJob.Abbreviation;
+         this.ingredients = [];
+         for ( let i = 0; i < 10; i++ )
+         {
+            let itemName = eval( `rawItem.ItemIngredient${ i }.Name` );
+            let itemQuantity = eval( "rawItem.AmountIngredient" + i );
+            let itemID = eval( `rawItem.ItemIngredient${ i }TargetID[0]` );
+
+            if ( itemQuantity > 0 )
+            {
+               this.ingredients.push( {
+                  name: itemName,
+                  quantity: itemQuantity,
+                  id: itemID,
+                  slot: i
+               } );
+            }
+         }
+      }
+   }
+
+   const craftableItems = [];
+   rawItemsData.forEach( page =>
+   {
+      page.Results.forEach( item =>
+      {
+         craftableItems.push( new craftableItem( item ) );
+      } );
+   } );
+
+   return craftableItems;
 }
 
 const worlds = await getWorlds();
@@ -149,16 +203,21 @@ inquirer.prompt( questions )
       console.log( 'Selected Job:', answers.job );
       console.log( 'Selected Level:', answers.level );
       console.log( 'Selected World:', answers.world );
-      let items = await getRecipeItems( answers.job, answers.level );
+      let items = await getCraftableItems( answers.job, answers.level );
       let itemSales = await getSalesHistory( answers.world, [ 4 ] );
       let csvSalesData = parse( itemSales.entries );
 
-      let itemsFormatted = prettier.format( JSON.stringify( items ), {
-         parser: "json",
-         singleQuote: false
-      } );
+      items = raw2Clean( items );
+      let itemsFormatted = prettier.format(
+         JSON.stringify( items ),
+         {
+            parser: "json",
+            singleQuote: false
+         }
+      );
 
-      const fileName = `${ answers.job }_LV.${ answers.level }_raw.json`;
+      const fileName = `${ items[0].job }_LV${ answers.level }.json`;
+      console.log( "Saving json..." );
       writeFile( fileName, itemsFormatted, ( err ) =>
       {
          if ( err ) throw err;
