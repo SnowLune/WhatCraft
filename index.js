@@ -125,7 +125,7 @@ function raw2Clean ( rawItemsData )
       {
          this.name = rawItem.Name;
          this.recipeLevel = rawItem.RecipeLevelTable.ClassJobLevel;
-         this.id = rawItem.ItemResultTargetID;
+         this.id = rawItem.ItemResultTargetID[ 0 ];
          this.job = rawItem.ClassJob.Abbreviation;
          this.ingredients = [];
          for ( let i = 0; i < 10; i++ )
@@ -134,7 +134,8 @@ function raw2Clean ( rawItemsData )
             let itemQuantity = eval( "rawItem.AmountIngredient" + i );
             let itemID = eval( `rawItem.ItemIngredient${ i }TargetID[0]` );
 
-            if ( itemQuantity > 0 )
+            // Skip if the ingredient slot is empty
+            if ( itemQuantity > 0 && itemID > 0 )
             {
                this.ingredients.push( {
                   name: itemName,
