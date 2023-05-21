@@ -15,7 +15,7 @@ async function getWorlds ()
    if ( res.ok )
    {
       const worlds = await res.json();
-      return worlds.sort( ( a, b ) => a.name.localeCompare( b.name ) );;
+      return worlds.sort( ( a, b ) => a.name.localeCompare( b.name ) );
    }
    else
       throw new Error( "Could not get worlds from Universalis API." );
@@ -156,6 +156,8 @@ function raw2Clean ( rawItemsData )
       } );
    } );
 
+   // Sort items in level order
+   craftableItems.sort( ( a, b ) => a.recipeLevel - b.recipeLevel );
    return craftableItems;
 }
 
@@ -216,7 +218,7 @@ inquirer.prompt( questions )
          }
       );
 
-      const fileName = `${ items[0].job }_LV${ answers.level }.json`;
+      const fileName = `${ items[ 0 ].job }_LV${ answers.level }.json`;
       console.log( "Saving json..." );
       writeFile( fileName, itemsFormatted, ( err ) =>
       {
