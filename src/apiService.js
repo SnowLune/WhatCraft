@@ -5,52 +5,98 @@ export const universalis = {
 
    baseURL: "https://universalis.app/api/v2",
 
+   // Fetcher function used by getCurrentData and getSalesHistory
+   async fetchMarketData ( itemIDs, url )
+   {
+      // Object to store accumulated request data
+      let itemsData = {};
+
+      // Break itemIDs into 100 length chunks to minimize api requests
+      const maxIDs = 100;
+      for ( let i = 0; i < itemIDs.length; i += maxIDs )
+      {
+         let itemIDsChunk = itemIDs.slice( i, i + maxIDs ).join( "," );
+         url = url.replace( "{itemIDs}", itemIDsChunk.join( "," ) );
+         const res = await fetch( url );
+         const data = await res.json();
+         Object.assign( itemsData, data );
+      }
+      return itemsData;
+   },
+
    // Get the current average minimum price of an item
    // using the average lowest prices
-   async getCurrentData ( itemIDs, worldID, averageSize = 5 )
+   async getCurrentData ( itemIDs, worldID, listings = 5, entries = listings )
    {
       const itemsPref = itemIDs.length > 1 ? "items." : "";
       const fields = [
          `${ itemsPref }listings.pricePerUnit`,
-         `${ itemsPref }items.recentHistory.pricePerUnit`
+         `${ itemsPref }recentHistory.pricePerUnit`,
+         `${ itemsPref }regularSaleVelocity`,
+         `${ itemsPref }currentAveragePrice`,
+         `${ itemsPref }itemID`,
+         `${ itemsPref }worldID`,
+         `${ itemsPref }lastUploadTime`
       ];
+
       const currentDataURL = [
          `${ this.baseURL }`,
          `/${ worldID }`,
-         `/${ itemIDs.join( "," ) }`,
-         `?listings=${ averageSize }`,
-         `&fields=${ fields }`
+         "/{itemIDs}",
+         listings > 0 ? `?listings=${ listings }` : "",
+         entries > 0 ? `?entries=${ entries }` : "",
+         `&fields=${ fields.join( "," ) }`
       ].join( "" );
 
-      const res = await fetch( currentDataURL );
-      const data = await res.json();
-
-      return data;
+      const currentData = await this.fetchMarketData( itemIDs, currentDataURL );
+      return currentData;
    },
 
-   async getSalesHistory ( itemIDs, worldID, averageSize = 5 )
+   async getSalesHistory ( itemIDs, worldID, entriesWithin, entries = 0 )
    {
-      const weekSeconds = 86400 * 7;
       const salesHistoryURL = [
          `${ this.baseURL }`,
          `/history`,
          `/${ worldID }`,
-         `/${ itemIDs.join( "," ) }/`,
-         ``
+         "/{itemIDs}",
+         entries > 0 ? `?entriesToReturn=${ entries }` : "",
+         entriesWithin > 0 ? `&entriesWithin=${ entriesWithin }` : ""
       ].join( "" );
+
+      const salesHistoryData =
+         await this.fetchMarketData( itemIDs, salesHistoryURL );
+      return salesHistoryData;
    },
 
-   async getWorlds ()
+   // Get data about worlds, data centers, and regions
+   async getWorldsDCs ( locationType )
    {
-      const res = await fetch( `${ this.baseURL }/worlds` );
-      if ( res.ok )
+      locationType = locationType.toLowerCase();
+      const locationTypes = [ "worlds", "data-centers" ];
+
+      if ( locationTypes.includes( locationType ) )
       {
-         const worlds = await res.json();
-         return worlds.sort( ( a, b ) => a.name.localeCompare( b.name ) );
+         try
+         {
+            const res = await fetch( `${ this.baseURL }/data-centers` );
+            if ( res.ok )
+            {
+               const worlds = await res.json();
+               return worlds.sort( ( a, b ) => a.name.localeCompare( b.name ) );
+            }
+            else
+               throw new
+                  Error( `Could not get ${ locationType } from Universalis API.` );
+         } catch ( error )
+         {
+            console.error( error );
+         }
       }
       else
-         throw new Error( "Could not get worlds from Universalis API." );
-   }
+         throw new Error(
+            "Unexpected input. Expected \"worlds\" or \"data-centers\"."
+         );
+   },
 };
 
 export const xivapi = {

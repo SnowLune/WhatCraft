@@ -1,25 +1,28 @@
-export class itemMarketData
+import { universalis } from "./apiService";
+
+export async function getCraftableItemsMarketData ( craftableItems )
 {
-   constructor ( itemData )
+   let salesHistoryItems = [];
+   let currentDataItems = [];
+   craftableItems.forEach( item =>
    {
-      this.name = itemData.name;
-      this.id = itemData.id;
-      this.ingredients = itemData.ingredients;
-
-      this.ingredients.forEach( ingredient =>
+      item.ingredients.forEach( ingredient =>
       {
-         // `slot` is irrelevant and unnecessary for market purposes
-         delete ingredient.slot;
-         ingredient.ingredientPriceAverage = 0;
+         // get ingredient market data and assign it, do avg math
+         if ( !currentDataItems.includes( ingredient.id ) )
+            currentDataItems.push( ingredient.id );
       } );
-      this.itemPriceAverage = 0;
-      this.itemCraftingCost = 0;
-   }
+      if ( !salesHistoryItems.includes( item.id ) )
+         salesHistoryItems.push( item.id );
+   } );
 
+   const salesHistory = await universalis.getSalesHistory( salesHistoryItems );
+   const currentData = await universalis.getCurrentData( currentDataItems );
 
+   return craftableItems;
+}
 
-   get wholeProfit ()
-   {
-      return this.itemPriceAverage - this.itemCraftingCost;
-   }
+export function calculateProfitability ( perUnitProfit, salesVelocity )
+{
+   return perUnitProfit * salesVelocity;
 }

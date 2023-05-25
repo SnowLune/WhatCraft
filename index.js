@@ -8,21 +8,6 @@ import { itemMarketData } from "./src/marketData.js";
 import { universalis, xivapi } from "./src/apiService.js";
 import { raw2Clean } from "./utils/helpers.js";
 
-
-
-// Return the Universalis sales history an item
-async function getCraftableItemSalesHistory ( craftable )
-{
-
-}
-
-async function getCraftableItemMarketData ( craftableItems )
-{
-
-}
-
-
-
 const worlds = await universalis.getWorlds();
 const craftingJobs = await xivapi.getClassJobs();
 var job = "crafting";
