@@ -1,6 +1,33 @@
-import { universalis } from "./apiService";
+import { universalis } from "./apiService.js";
 
-export async function getCraftableItemsMarketData ( craftableItems )
+// Calculate averages using the interquartile range method
+function calculateAverageIQR ( prices )
+{
+   // Sort entries by price (ascending)
+   prices.sort( ( a, b ) => a - b );
+
+   // Calculate quarters for IQR
+   const quarter1 = prices[ Math.floor( prices.length * 0.25 ) ];
+   const quarter3 = prices[ Math.floor( prices.length * 0.75 ) ];
+   const interQuartileRange = quarter3 - quarter1;
+   const threshold = 1.5 * interQuartileRange;
+   // Filter
+   const filteredPrices = prices.filter(
+      price =>
+         price >= quarter1 - threshold && price <= quarter3 + threshold
+   );
+   // Calculate sum of prices after filtering
+   const priceSum = filteredPrices.reduce(
+      ( accumulator, price ) => accumulator + price, 0
+   );
+   // Calculate average price
+   const averagePrice = priceSum / filteredPrices.length;
+
+   return averagePrice;
+}
+
+export async function getCraftableItemsMarketData
+   ( craftableItems, worldID )
 {
    let salesHistoryItems = [];
    let currentDataItems = [];
@@ -16,8 +43,44 @@ export async function getCraftableItemsMarketData ( craftableItems )
          salesHistoryItems.push( item.id );
    } );
 
-   const salesHistory = await universalis.getSalesHistory( salesHistoryItems );
-   const currentData = await universalis.getCurrentData( currentDataItems );
+   const weekInSeconds = 86400 * 7;
+   const salesHistoryData = await universalis.getSalesHistory(
+      salesHistoryItems, worldID, weekInSeconds
+   );
+   const currentData = await universalis.getCurrentData(
+      currentDataItems, worldID
+   );
+
+   craftableItems.forEach( item =>
+   {
+      const itemData = salesHistoryData.items[ `${ item.id }` ];
+      // Only calculate average if there are entries
+      if ( itemData?.entries.length > 0 )
+      {
+         let prices = itemData.entries.map( entry => entry.pricePerUnit );
+         const averagePrice = calculateAverageIQR( prices );
+         // Set item average price and sale velocity
+         item.averagePrice = Math.round( averagePrice );
+         item.saleVelocity = itemData.regularSaleVelocity;
+
+         item.ingredients.forEach( ingredient =>
+         {
+            const ingredientData = currentData.items[ `${ ingredient.id }` ];
+            // Accumulate listing and recent history entry sale prices
+            const ingredientPrices = [];
+            const listingPrices = ingredientData.listings.map(
+               listing => listing.pricePerUnit
+            );
+            const historyPrices = ingredientData.recentHistory.map(
+               entry => entry.pricePerUnit
+            );
+            ingredientPrices.push( ...listingPrices, ...historyPrices );
+            // Get average ingredient price
+            const averagePrice = calculateAverageIQR( ingredientPrices );
+            ingredient.averagePrice = Math.round( averagePrice );
+         } );
+      }
+   } );
 
    return craftableItems;
 }

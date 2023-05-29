@@ -4,11 +4,11 @@ import prettier from "prettier";
 import { parse } from "json2csv";
 import { writeFile } from "node:fs";
 import craftableItem from "./src/craftableItem.js";
-import { itemMarketData } from "./src/marketData.js";
+import { getCraftableItemsMarketData } from "./src/marketData.js";
 import { universalis, xivapi } from "./src/apiService.js";
 import { raw2Clean } from "./utils/helpers.js";
 
-const worlds = await universalis.getWorlds();
+const worlds = await universalis.getWorldsDCs( "worlds" );
 const craftingJobs = await xivapi.getClassJobs();
 var job = "crafting";
 
@@ -57,6 +57,7 @@ inquirer.prompt( questions )
       // let csvSalesData = parse( itemSales.entries );
 
       items = raw2Clean( items );
+      items = await getCraftableItemsMarketData( items, answers.world );
       let itemsFormatted = prettier.format(
          JSON.stringify( items ),
          {

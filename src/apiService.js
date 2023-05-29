@@ -9,24 +9,26 @@ export const universalis = {
    async fetchMarketData ( itemIDs, url )
    {
       // Object to store accumulated request data
-      let itemsData = {};
+      let itemsData = { itemIDs: [], items: {} };
 
       // Break itemIDs into 100 length chunks to minimize api requests
       const maxIDs = 100;
       for ( let i = 0; i < itemIDs.length; i += maxIDs )
       {
-         let itemIDsChunk = itemIDs.slice( i, i + maxIDs ).join( "," );
-         url = url.replace( "{itemIDs}", itemIDsChunk.join( "," ) );
-         const res = await fetch( url );
+         let itemIDsChunk = itemIDs.slice( i, i + maxIDs );
+         let chunkURL = url.replace( "{itemIDs}", itemIDsChunk.join( "," ) );
+         console.log( chunkURL );
+         const res = await fetch( chunkURL );
          const data = await res.json();
-         Object.assign( itemsData, data );
+         // Merge items
+         Object.assign( itemsData.items, await data.items );
       }
       return itemsData;
    },
 
    // Get the current average minimum price of an item
    // using the average lowest prices
-   async getCurrentData ( itemIDs, worldID, listings = 5, entries = listings )
+   async getCurrentData ( itemIDs, worldID, listings = 10, entries = listings )
    {
       const itemsPref = itemIDs.length > 1 ? "items." : "";
       const fields = [
@@ -44,7 +46,7 @@ export const universalis = {
          `/${ worldID }`,
          "/{itemIDs}",
          listings > 0 ? `?listings=${ listings }` : "",
-         entries > 0 ? `?entries=${ entries }` : "",
+         entries > 0 ? `&entries=${ entries }` : "",
          `&fields=${ fields.join( "," ) }`
       ].join( "" );
 
@@ -78,7 +80,7 @@ export const universalis = {
       {
          try
          {
-            const res = await fetch( `${ this.baseURL }/data-centers` );
+            const res = await fetch( `${ this.baseURL }/${ locationType }` );
             if ( res.ok )
             {
                const worlds = await res.json();
