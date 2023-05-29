@@ -26,6 +26,28 @@ function calculateAverageIQR ( prices )
    return averagePrice;
 }
 
+export function calculateProfit ( craftableItem )
+{
+   let unitProfit;
+   let profitabilityScore;
+
+   craftableItem.ingredients.forEach( ingredient =>
+   {
+      ingredient.totalPrice = ingredient.averagePrice * ingredient.quantity;
+   } );
+
+   let ingredientPrices = craftableItem.ingredients.map(
+      ingredient => ingredient.totalPrice );
+   let craftingPriceTotal = ingredientPrices.reduce(
+      ( acc, price ) => acc + price, 0 );
+   unitProfit = craftableItem.averagePrice - craftingPriceTotal;
+   profitabilityScore = unitProfit * craftableItem.saleVelocity;
+
+   craftableItem.ingredientPriceTotal = craftingPriceTotal;
+   craftableItem.unitProfit = unitProfit;
+   craftableItem.profitabilityScore = profitabilityScore;
+}
+
 export async function getCraftableItemsMarketData
    ( craftableItems, worldID )
 {
@@ -79,13 +101,19 @@ export async function getCraftableItemsMarketData
             const averagePrice = calculateAverageIQR( ingredientPrices );
             ingredient.averagePrice = Math.round( averagePrice );
          } );
+
+         // Calculate Profit
+         calculateProfit( item );
+      }
+      else
+      {
+         item.averagePrice = null;
+         item.unitProfit = 0;
+         item.profitabilityScore = 0;
       }
    } );
 
+   craftableItems.sort(
+      ( a, b ) => a.profitabilityScore - b.profitabilityScore );
    return craftableItems;
-}
-
-export function calculateProfitability ( perUnitProfit, salesVelocity )
-{
-   return perUnitProfit * salesVelocity;
 }
