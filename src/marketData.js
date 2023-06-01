@@ -123,9 +123,17 @@ export async function getCraftableItemsMarketData
       {
          let prices = itemData.entries.map( entry => entry.pricePerUnit );
          const averagePrice = calculateAverageIPR( prices, 1, 3 );
-         // Set item average price and sale velocity
+
+         // Set item average price, sale velocity, and stack size
          item.averagePrice = Math.round( averagePrice );
          item.saleVelocity = itemData.regularSaleVelocity;
+         let popularStackSize
+            = Object.entries(
+               itemData.stackSizeHistogram
+            ).sort( ( a, b ) => b[ 1 ] - a[ 1 ] )[ 0 ][ 0 ];
+         popularStackSize = parseInt( popularStackSize );
+         item.popularStackSize = popularStackSize;
+
          // (Decimal) Percentage of sales that were high quality
          item.hqSalePercentage = (
             itemData.hqSaleVelocity / itemData.regularSaleVelocity
