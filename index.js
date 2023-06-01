@@ -8,6 +8,7 @@ import { getCraftableItemsMarketData } from "./src/marketData.js";
 import { universalis, xivapi } from "./src/apiService.js";
 import { raw2Clean } from "./utils/helpers.js";
 
+const datacenters = await universalis.getWorldsDCs( "data-centers" );
 const worlds = await universalis.getWorldsDCs( "worlds" );
 const craftingJobs = await xivapi.getClassJobs();
 var job = "crafting";
@@ -66,7 +67,11 @@ inquirer.prompt( questions )
          }
       );
 
-      const fileName = `${ items[ 0 ].job }_LV${ answers.level }`;
+      const fileName = [
+         `${ items[ 0 ].job }_`,
+         `LV${ answers.level }_`,
+         `${ answers.world }`
+      ].join( "" );
       const timestamp = Math.floor( Date.now() / 1000 );
       const fileNameFull = `${ fileName }_${ timestamp }.json`;
 

@@ -13,16 +13,25 @@ export const universalis = {
 
       // Break itemIDs into 100 length chunks to minimize api requests
       const maxIDs = 100;
+
+      // Progress bar
+      console.log( "Fetching market data..." );
+      const progBar = new cliProgress.SingleBar( {}, cliProgress.Presets.shades_classic );
+      progBar.start( Math.ceil( itemIDs.length / 100 ), 0 );
+
       for ( let i = 0; i < itemIDs.length; i += maxIDs )
       {
          let itemIDsChunk = itemIDs.slice( i, i + maxIDs );
          let chunkURL = url.replace( "{itemIDs}", itemIDsChunk.join( "," ) );
-         console.log( chunkURL );
          const res = await fetch( chunkURL );
          const data = await res.json();
          // Merge items
          Object.assign( itemsData.items, await data.items );
+         // Increment progress bar
+         progBar.increment();
       }
+
+      progBar.stop();
       return itemsData;
    },
 

@@ -1,3 +1,4 @@
+import cliProgress from "cli-progress";
 import { universalis } from "./apiService.js";
 
 // Calculate averages using the interquartile range method
@@ -15,6 +16,43 @@ function calculateAverageIQR ( prices )
    const filteredPrices = prices.filter(
       price =>
          price >= quarter1 - threshold && price <= quarter3 + threshold
+   );
+   // Calculate sum of prices after filtering
+   const priceSum = filteredPrices.reduce(
+      ( accumulator, price ) => accumulator + price, 0
+   );
+   // Calculate average price
+   const averagePrice = priceSum / filteredPrices.length;
+
+   return averagePrice;
+}
+
+// Calculate averages using the interpercentile range method
+function calculateAverageIPR ( prices, startPercent = 1, stopPercent = 10 )
+{
+   function percentify ( value )
+   {
+      if ( typeof ( value ) !== "number" )
+         throw new TypeError( `Expected number, got ${ typeof ( value ) }` );
+      value = Math.abs( value ) * 0.01;
+      return value;
+   }
+
+   startPercent = percentify( startPercent );
+   stopPercent = percentify( stopPercent );
+
+   // Sort entries by price (ascending)
+   prices.sort( ( a, b ) => a - b );
+
+   // Calculate quarters for IPR
+   const percentile1 = prices[ Math.floor( prices.length * startPercent ) ];
+   const percentile2 = prices[ Math.floor( prices.length * stopPercent ) ];
+   const interPercentileRange = percentile2 - percentile1;
+   const threshold = 1.5 * interPercentileRange;
+   // Filter
+   const filteredPrices = prices.filter(
+      price =>
+         price >= percentile1 - threshold && price <= percentile2 + threshold
    );
    // Calculate sum of prices after filtering
    const priceSum = filteredPrices.reduce(
@@ -65,13 +103,17 @@ export async function getCraftableItemsMarketData
          salesHistoryItems.push( item.id );
    } );
 
-   const weekInSeconds = 86400 * 7;
+   const daySeconds = 86400 * 3;
    const salesHistoryData = await universalis.getSalesHistory(
-      salesHistoryItems, worldID, weekInSeconds
+      salesHistoryItems, worldID, daySeconds
    );
    const currentData = await universalis.getCurrentData(
       currentDataItems, worldID
    );
+
+   console.log( "Calculating prices..." );
+   const progBar = new cliProgress.SingleBar( {}, cliProgress.Presets.shades_classic );
+   progBar.start( craftableItems.length, 0 );
 
    craftableItems.forEach( item =>
    {
@@ -80,10 +122,14 @@ export async function getCraftableItemsMarketData
       if ( itemData?.entries.length > 0 )
       {
          let prices = itemData.entries.map( entry => entry.pricePerUnit );
-         const averagePrice = calculateAverageIQR( prices );
+         const averagePrice = calculateAverageIPR( prices, 1, 3 );
          // Set item average price and sale velocity
          item.averagePrice = Math.round( averagePrice );
          item.saleVelocity = itemData.regularSaleVelocity;
+         // (Decimal) Percentage of sales that were high quality
+         item.hqSalePercentage = (
+            itemData.hqSaleVelocity / itemData.regularSaleVelocity
+         );
 
          item.ingredients.forEach( ingredient =>
          {
@@ -108,10 +154,14 @@ export async function getCraftableItemsMarketData
       else
       {
          item.averagePrice = null;
-         item.unitProfit = 0;
-         item.profitabilityScore = 0;
+         item.unitProfit = null;
+         item.profitabilityScore = null;
       }
+
+      progBar.increment( 1 );
    } );
+
+   progBar.stop();
 
    craftableItems.sort(
       ( a, b ) => a.profitabilityScore - b.profitabilityScore );
