@@ -1,6 +1,3 @@
-import cliProgress from "cli-progress";
-import fetch from "node-fetch";
-
 export const universalis = {
 
    baseURL: "https://universalis.app/api/v2",
@@ -16,8 +13,6 @@ export const universalis = {
 
       // Progress bar
       console.log( "Fetching market data..." );
-      const progBar = new cliProgress.SingleBar( {}, cliProgress.Presets.shades_classic );
-      progBar.start( Math.ceil( itemIDs.length / 100 ), 0 );
 
       for ( let i = 0; i < itemIDs.length; i += maxIDs )
       {
@@ -27,11 +22,7 @@ export const universalis = {
          const data = await res.json();
          // Merge items
          Object.assign( itemsData.items, await data.items );
-         // Increment progress bar
-         progBar.increment();
       }
-
-      progBar.stop();
       return itemsData;
    },
 
@@ -175,28 +166,21 @@ export const xivapi = {
 
       console.log( "Fetching craftable items..." );
 
-      const progBar = new cliProgress.SingleBar( {}, cliProgress.Presets.shades_classic );
-      progBar.start( 1, 0 );
-
       const res = await fetch( searchURL );
       const data = await res.json();
       let dataPages = [ data ];
       let pageTotal = data.Pagination.PageTotal;
 
-      progBar.update( 1 );
       if ( pageTotal > 1 )
       {
-         progBar.start( pageTotal, 1 );
          // Next page to get is 2
          for ( let i = 2; i <= pageTotal; i++ )
          {
             const res = await fetch( searchURL + `&page=${ i }` );
             const data = await res.json();
             dataPages.push( data );
-            progBar.update( i );
          }
       }
-      progBar.stop();
       return dataPages;
    }
 };

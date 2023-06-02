@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>WhatCraft</title>
+</head>
+
+<body>
+   <form id="input-form">
+      <label for="job">Crafting Class:</label>
+      <select id="class-job" name="job" required>
+         <option value="">Select A Class</option>
+      </select>
+
+      <label for="level">Level:</label>
+      <input type="number" id="class-job-level" name="level" required>
+
+      <label for="datacenter">Data Center:</label>
+      <select id="dc-select" name="datacenter" required>
+         <option value="">Select A Data Center</option>
+      </select>
+
+      <label for="world">World:</label>
+      <select id="world-select" name="world" required disabled></select>
+
+      <input type="submit" value="Submit">
+   </form>
+   <div id="main">
+      <form id="filter-form">
+         <label for="hide-hq"
+            title="Hide items that are primarly sold in high quality">No
+            HQ</label>
+         <input type="checkbox" name="hide-hq" id="hide-high-quality">
+         <div id="results"></div>
+      </form>
+   </div>
+   <script src="./js/main.js" type="module"></script>
+</body>
+
+</html>

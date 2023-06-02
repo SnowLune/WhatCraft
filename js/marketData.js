@@ -1,4 +1,3 @@
-import cliProgress from "cli-progress";
 import { universalis } from "./apiService.js";
 
 // Calculate averages using the interquartile range method
@@ -112,8 +111,6 @@ export async function getCraftableItemsMarketData
    );
 
    console.log( "Calculating prices..." );
-   const progBar = new cliProgress.SingleBar( {}, cliProgress.Presets.shades_classic );
-   progBar.start( craftableItems.length, 0 );
 
    craftableItems.forEach( item =>
    {
@@ -165,11 +162,7 @@ export async function getCraftableItemsMarketData
          item.unitProfit = null;
          item.profitabilityScore = null;
       }
-
-      progBar.increment( 1 );
    } );
-
-   progBar.stop();
 
    craftableItems.sort(
       ( a, b ) => a.profitabilityScore - b.profitabilityScore );
