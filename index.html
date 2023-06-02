@@ -9,32 +9,36 @@
 
 <body>
    <form id="input-form">
-      <label for="job">Crafting Class:</label>
-      <select id="class-job" name="job" required>
-         <option value="">Select A Class</option>
-      </select>
+      <div>
+         <label for="job">Crafting Class:</label>
+         <select id="class-job" name="job" required>
+            <option value="">Select A Class</option>
+         </select>
 
-      <label for="level">Level:</label>
-      <input type="number" id="class-job-level" name="level" required>
+         <label for="level">Level:</label>
+         <input type="number" id="class-job-level" name="level" required>
+      </div>
+      <div>
+         <label for="datacenter">Data Center:</label>
+         <select id="dc-select" name="datacenter" required>
+            <option value="">Select A Data Center</option>
+         </select>
 
-      <label for="datacenter">Data Center:</label>
-      <select id="dc-select" name="datacenter" required>
-         <option value="">Select A Data Center</option>
-      </select>
-
-      <label for="world">World:</label>
-      <select id="world-select" name="world" required disabled></select>
-
-      <input type="submit" value="Submit">
+         <label for="world">World:</label>
+         <select id="world-select" name="world" required disabled></select>
+      </div>
+      <div id="form-buttons">
+         <input type="submit" value="Submit">
+         <button id="download-btn" disabled>Download JSON</button>
+      </div>
    </form>
-   <div id="main">
-      <form id="filter-form">
-         <label for="hide-hq"
-            title="Hide items that are primarly sold in high quality">No
-            HQ</label>
-         <input type="checkbox" name="hide-hq" id="hide-high-quality">
-         <div id="results"></div>
-      </form>
+   <form id="filter-form">
+      <label for="hide-hq"
+         title="Hide items that are primarly sold in high quality">No
+         HQ</label>
+      <input type="checkbox" name="hide-hq" id="hide-high-quality">
+   </form>
+   <div id="results">
    </div>
    <script src="./js/main.js" type="module"></script>
 </body>

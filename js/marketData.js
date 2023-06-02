@@ -139,14 +139,17 @@ export async function getCraftableItemsMarketData
          item.ingredients.forEach( ingredient =>
          {
             const ingredientData = currentData.items[ `${ ingredient.id }` ];
+            if ( !ingredientData )
+               return;
+
             // Accumulate listing and recent history entry sale prices
             const ingredientPrices = [];
-            const listingPrices = ingredientData.listings.map(
-               listing => listing.pricePerUnit
-            );
-            const historyPrices = ingredientData.recentHistory.map(
-               entry => entry.pricePerUnit
-            );
+            const listingPrices = ingredientData?.listings
+               .map( listing => listing.pricePerUnit )
+               .filter( listing => listing ); /* Remove undefined */
+            const historyPrices = ingredientData?.recentHistory
+               .map( entry => entry.pricePerUnit )
+               .filter( entry => entry ); /* Remove undefined */
             ingredientPrices.push( ...listingPrices, ...historyPrices );
             // Get average ingredient price
             const averagePrice = calculateAverageIQR( ingredientPrices );
@@ -164,7 +167,7 @@ export async function getCraftableItemsMarketData
       }
    } );
 
-   craftableItems.sort(
-      ( a, b ) => a.profitabilityScore - b.profitabilityScore );
+   craftableItems
+      .sort( ( a, b ) => b.profitabilityScore - a.profitabilityScore );
    return craftableItems;
 }
