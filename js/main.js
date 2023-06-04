@@ -10,6 +10,7 @@ const dataCenters = await universalis.getWorldsDCs( "data-centers" );
 const worlds = await universalis.getWorldsDCs( "worlds" );
 const craftingJobs = await xivapi.getClassJobs();
 console.debug( { jobs: craftingJobs, dcs: dataCenters, worlds: worlds } );
+
 // Elements
 const inputFormEl = document.getElementById( "input-form" );
 const jobSelectEl = document.getElementById( "class-job" );
@@ -17,6 +18,8 @@ const levelInputEl = document.getElementById( "class-job-level" );
 const worldSelectEl = document.getElementById( "world-select" );
 const dataCenterSelectEl = document.getElementById( "dc-select" );
 const resultsEl = document.getElementById( "results" );
+const loadTextEl = document.getElementById( "load-text" );
+const progressBarEl = document.getElementById( "load-progress" );
 const downloadBtnEl = document.getElementById( "download-btn" );
 
 // Functions
@@ -135,44 +138,3 @@ if ( document.readyState === "loading" )
 }
 else
    init();
-
-// inquirer.prompt( questions )
-//    .then( async ( answers ) =>
-//    {
-//       console.log( 'Selected Job:', answers.job );
-//       console.log( 'Selected Level:', answers.level );
-//       console.log( 'Selected World:', answers.world );
-//       let items = await xivapi.getCraftableItems( answers.job, answers.level );
-//       // let itemSales = await getSalesHistory( answers.world, [ 4 ] );
-//       // let csvSalesData = parse( itemSales.entries );
-
-//       items = raw2Clean( items );
-//       items = await getCraftableItemsMarketData( items, answers.world );
-//       let itemsFormatted = prettier.format(
-//          JSON.stringify( items ),
-//          {
-//             parser: "json",
-//             singleQuote: false
-//          }
-//       );
-
-//       const fileName = [
-//          `${ items[ 0 ].job }_`,
-//          `LV${ answers.level }_`,
-//          `${ answers.world }`
-//       ].join( "" );
-//       const timestamp = Math.floor( Date.now() / 1000 );
-//       const fileNameFull = `${ fileName }_${ timestamp }.json`;
-
-//       console.log( "Saving json..." );
-//       writeFile( fileNameFull, itemsFormatted, ( err ) =>
-//       {
-//          if ( err ) throw err;
-//          console.log( `File saved to ${ fileNameFull }.` );
-//       } );
-//    } )
-//    .catch( ( error ) =>
-//    {
-//       console.error( 'Error:', error );
-//    } );
-

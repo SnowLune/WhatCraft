@@ -5,10 +5,11 @@
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>WhatCraft</title>
+   <link rel="stylesheet" type="text/css" href="./css/main.css">
 </head>
 
 <body>
-   <form id="input-form">
+   <form id="input-form" class="user-input-form">
       <div>
          <label for="job">Crafting Class:</label>
          <select id="class-job" name="job" required>
@@ -39,6 +40,10 @@
       <input type="checkbox" name="hide-hq" id="hide-high-quality">
    </form>
    <div id="results">
+      <div id="progress">
+         <span id="load-text"></span>
+         <progress id="load-progress" max="0" value="0"></progress>
+      </div>
    </div>
    <script src="./js/main.js" type="module"></script>
 </body>
