@@ -46,3 +46,14 @@ export function downloadFile ( rawData, filename, type )
    downloadLink.click();
    document.body.removeChild( downloadLink );
 }
+
+export function updateProgressText ( progressTextEl, text )
+{
+   progressTextEl.textContent = `${ text }`;
+}
+
+export function updateProgressBar ( progressBarEl, current, max )
+{
+   progressBarEl.setAttribute( "max", max );
+   progressBarEl.setAttribute( "value", current );
+}
