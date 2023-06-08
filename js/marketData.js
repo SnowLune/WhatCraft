@@ -66,7 +66,8 @@ function calculateAverageIPR ( prices, startPercent = 1, stopPercent = 10 )
 export function calculateProfit ( craftableItem )
 {
    let unitProfit;
-   let profitabilityScore;
+   let profitabilityScore, profitabilityScore2;
+   let saleVelocity = craftableItem.saleVelocity;
 
    craftableItem.ingredients.forEach( ingredient =>
    {
@@ -78,16 +79,31 @@ export function calculateProfit ( craftableItem )
    let craftingPriceTotal = ingredientPrices.reduce(
       ( acc, price ) => acc + price, 0 );
    unitProfit = craftableItem.averagePrice - craftingPriceTotal;
-   profitabilityScore = unitProfit * craftableItem.saleVelocity;
+
+   // First method of calculating profitability
+   profitabilityScore = unitProfit * saleVelocity;
+
+   // Second method. To sale velocity pow.
+   if ( unitProfit > 0 )
+   {
+      profitabilityScore2 = unitProfit ** saleVelocity;
+   }
+   else
+   {
+      profitabilityScore2 = ( Math.abs( unitProfit ) ** saleVelocity ) * -1;
+   }
 
    craftableItem.ingredientPriceTotal = craftingPriceTotal;
    craftableItem.unitProfit = unitProfit;
    craftableItem.profitabilityScore = profitabilityScore;
+   craftableItem.profitabilityScore2 = profitabilityScore2;
 }
 
 export async function getCraftableItemsMarketData
-   ( craftableItems, worldID )
+   ( craftableItems, worldID, days = 1, progress )
 {
+   const { progressBar, progressText } = progress;
+
    let salesHistoryItems = [];
    let currentDataItems = [];
    craftableItems.forEach( item =>
@@ -102,12 +118,14 @@ export async function getCraftableItemsMarketData
          salesHistoryItems.push( item.id );
    } );
 
-   const daySeconds = 86400 * 3;
+   const daySeconds = 86400;
    const salesHistoryData = await universalis.getSalesHistory(
-      salesHistoryItems, worldID, daySeconds
+      salesHistoryItems, worldID, daySeconds * days,
+      { progressBar: progressBar, progressText: progressText }
    );
    const currentData = await universalis.getCurrentData(
-      currentDataItems, worldID
+      currentDataItems, worldID,
+      { progressBar: progressBar, progressText: progressText }
    );
 
    console.log( "Calculating prices..." );

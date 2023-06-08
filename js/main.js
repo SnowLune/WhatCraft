@@ -21,6 +21,7 @@ const resultsEl = document.getElementById( "results" );
 const loadTextEl = document.getElementById( "load-text" );
 const progressBarEl = document.getElementById( "load-progress" );
 const downloadBtnEl = document.getElementById( "download-btn" );
+const daysEl = document.getElementById( "days" );
 
 // Functions
 function collectFormData ()
@@ -95,13 +96,11 @@ inputFormEl.addEventListener( "submit", async ( event ) =>
    const userData = collectFormData();
 
    const rawItemsData = await xivapi.getCraftableItems(
-      userData.classJobID, userData.classJobLevel
-   );
-
+      userData.classJobID, userData.classJobLevel );
    const itemsData = raw2Clean( rawItemsData );
    const itemsMarketData = await getCraftableItemsMarketData(
-      itemsData, userData.worldID
-   );
+      itemsData, userData.worldID, 1,
+      { progressBar: progressBarEl, progressText: loadTextEl } );
 
    console.log( "Done." );
 
