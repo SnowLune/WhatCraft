@@ -10,34 +10,66 @@
 
 <body>
    <form id="input-form" class="user-input-form">
-      <div>
-         <label for="job">Crafting Class:</label>
+      <fieldset>
+         <legend>Class Info</legend>
+         <label for="class-job">Crafting Class:</label>
          <select id="class-job" name="job" required>
             <option value="">Select A Class</option>
          </select>
 
-         <label for="level">Level:</label>
+         <label for="class-job-level">Level:</label>
          <input type="number" id="class-job-level" name="level" required>
-      </div>
-      <div>
-         <label for="datacenter">Data Center:</label>
+      </fieldset>
+      <fieldset>
+         <legend>Server Info</legend>
+         <label for="dc-select">Data Center:</label>
          <select id="dc-select" name="datacenter" required>
             <option value="">Select A Data Center</option>
          </select>
 
-         <label for="world">World:</label>
+         <label for="world-select">World:</label>
          <select id="world-select" name="world" required disabled></select>
-      </div>
+      </fieldset>
+      <!-- <fieldset>
+         <legend>Other</legend>
+         <label for="days" value="1" min="1" max="28"
+            title="How many days to get market data for">Days:</label>
+         <input type="number" id="days" name="days" required>
+      </fieldset> -->
       <div id="form-buttons">
-         <input type="submit" value="Submit">
+         <input type="submit" value="Submit" id="search-btn">
          <button id="download-btn" disabled>Download JSON</button>
       </div>
    </form>
    <form id="filter-form">
-      <label for="hide-hq"
-         title="Hide items that are primarly sold in high quality">No
-         HQ</label>
-      <input type="checkbox" name="hide-hq" id="hide-high-quality">
+      <fieldset>
+         <legend>Filters</legend>
+         <fieldset>
+            <legend>Sort</legend>
+            <label for="sort-select" title="How items should be sorted">Sort
+               By</label>
+            <select id="sort-select" name="sort-by">
+               <option value="name">Item Name</option>
+               <option value="level">Crafting Level</option>
+               <option value="sale-price">Sale Price</option>
+               <option value="unit-profit">Unit Profit</option>
+               <option value="profitability">Profitability Score</option>
+               <option value="sale-velocity">Sale Velocity</option>
+            </select>
+            <div>
+               <input type="radio" id="sort-order-asc" name="sort-order"
+                  value="ascending">
+               <label for="sort-order-asc">Ascending</label>
+               <input type="radio" id="sort-order-des" name="sort-order"
+                  value="descending" checked>
+               <label for="sort-order-des">Descending</label>
+            </div>
+         </fieldset>
+         <label for="hide-hq"
+            title="Hide items that are primarly sold in high quality">No
+            HQ</label>
+         <input type="checkbox" name="hide-hq" id="hide-high-quality">
+      </fieldset>
    </form>
    <div id="results">
       <div id="progress">
