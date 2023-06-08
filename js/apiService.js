@@ -1,21 +1,28 @@
+import { updateProgressBar, updateProgressText } from "./helpers.js";
+
 export const universalis = {
 
    baseURL: "https://universalis.app/api/v2",
 
    // Fetcher function used by getCurrentData and getSalesHistory
-   async fetchMarketData ( itemIDs, url )
+   async fetchMarketData ( itemIDs, url, options )
    {
+      const { progressBar, progressText } = options;
+
       // Object to store accumulated request data
       let itemsData = { itemIDs: [], items: {} };
 
       // Break itemIDs into 100 length chunks to minimize api requests
       const maxIDs = 100;
 
-      // Progress bar
-      console.log( "Fetching market data..." );
+      const itemTotal = itemIDs.length;
 
-      for ( let i = 0; i < itemIDs.length; i += maxIDs )
+      for ( let i = 0; i < itemTotal; i += maxIDs )
       {
+         // Progress bar
+         updateProgressText( progressText,
+            `Fetching item market data...(${ i }/${ itemTotal })` );
+         updateProgressBar( progressBar, i, itemTotal );
          let itemIDsChunk = itemIDs.slice( i, i + maxIDs );
          let chunkURL = url.replace( "{itemIDs}", itemIDsChunk.join( "," ) );
          const res = await fetch( chunkURL );
@@ -23,13 +30,21 @@ export const universalis = {
          // Merge items
          Object.assign( itemsData.items, await data.items );
       }
+      // Done progress
+      updateProgressText( progressText,
+         `Fetching item market data...(${ itemTotal }/${ itemTotal })` );
+      updateProgressBar( progressBar, itemTotal, itemTotal );
       return itemsData;
    },
 
    // Get the current average minimum price of an item
    // using the average lowest prices
-   async getCurrentData ( itemIDs, worldID, listings = 10, entries = listings )
+   async getCurrentData ( itemIDs, worldID, options )
    {
+      const defaultOpts = { listings: 10, entries: 10 };
+      const mergedOpts = { ...defaultOpts, ...options };
+      const { listings, entries, progressBar, progressText } = mergedOpts;
+
       const itemsPref = itemIDs.length > 1 ? "items." : "";
       const fields = [
          `${ itemsPref }listings.pricePerUnit`,
@@ -50,12 +65,16 @@ export const universalis = {
          `&fields=${ fields.join( "," ) }`
       ].join( "" );
 
-      const currentData = await this.fetchMarketData( itemIDs, currentDataURL );
+      const currentData = await this.fetchMarketData( itemIDs, currentDataURL, { progressBar: progressBar, progressText: progressText } );
       return currentData;
    },
 
-   async getSalesHistory ( itemIDs, worldID, entriesWithin, entries = 0 )
+   async getSalesHistory ( itemIDs, worldID, entriesWithin, options )
    {
+      const defaultOpts = { entries: 0 };
+      const mergedOpts = { ...defaultOpts, ...options };
+      const { entries, progressBar, progressText } = mergedOpts;
+
       const salesHistoryURL = [
          `${ this.baseURL }`,
          `/history`,
@@ -66,7 +85,8 @@ export const universalis = {
       ].join( "" );
 
       const salesHistoryData =
-         await this.fetchMarketData( itemIDs, salesHistoryURL );
+         await this.fetchMarketData( itemIDs, salesHistoryURL,
+            { progressBar: progressBar, progressText: progressText } );
       return salesHistoryData;
    },
 
@@ -153,6 +173,7 @@ export const xivapi = {
          "ClassJob.NameEnglish",
          "ClassJob.Abbreviation",
          "ItemResult.IsUntradable",
+         "SecretRecipeBook",
          ...generateIngredientColString()
       ];
 

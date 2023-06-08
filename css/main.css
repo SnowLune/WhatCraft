@@ -6,7 +6,7 @@
    box-sizing: border-box;
 }
 
-.user-input-form *
+.user-input-form
 {
-   border-radius: 0;
+   max-width: 800px;
 }

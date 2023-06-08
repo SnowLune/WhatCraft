@@ -6,6 +6,18 @@ class craftableItem
       this.recipeLevel = rawItem.RecipeLevelTable.ClassJobLevel;
       this.id = rawItem.ItemResultTargetID[ 0 ];
       this.job = rawItem.ClassJob.Abbreviation;
+
+      // Master crafting books, etc
+      if ( rawItem.SecretRecipeBook )
+      {
+         this.secretRecipeBook = {
+            id: rawItem?.SecretRecipeBook.ID,
+            itemID: rawItem.SecretRecipeBook?.ItemTargetID,
+            name: rawItem.SecretRecipeBook?.Name
+         };
+      }
+      else this.secretRecipeBook = null;
+
       this.ingredients = [];
       for ( let i = 0; i < 10; i++ )
       {
