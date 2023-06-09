@@ -1,4 +1,5 @@
 import { universalis } from "./apiService.js";
+import { updateProgress } from "./helpers.js";
 
 // Calculate averages using the interquartile range method
 function calculateAverageIQR ( prices )
@@ -63,7 +64,7 @@ function calculateAverageIPR ( prices, startPercent = 1, stopPercent = 10 )
    return averagePrice;
 }
 
-export function calculateProfit ( craftableItem )
+function calculateProfit ( craftableItem )
 {
    let unitProfit;
    let profitabilityScore, profitabilityScore2;
@@ -85,13 +86,9 @@ export function calculateProfit ( craftableItem )
 
    // Second method. To sale velocity pow.
    if ( unitProfit > 0 )
-   {
       profitabilityScore2 = unitProfit ** saleVelocity;
-   }
    else
-   {
       profitabilityScore2 = ( Math.abs( unitProfit ) ** saleVelocity ) * -1;
-   }
 
    craftableItem.ingredientPriceTotal = craftingPriceTotal;
    craftableItem.unitProfit = unitProfit;
@@ -100,9 +97,11 @@ export function calculateProfit ( craftableItem )
 }
 
 export async function getCraftableItemsMarketData
-   ( craftableItems, worldID, days = 1, progress )
+   ( craftableItems, worldID, options )
 {
-   const { progressBar, progressText } = progress;
+   const defaultOpts = { days: 1 };
+   const mergedOpts = { ...defaultOpts, ...options };
+   const { days, progressBar, progressText } = mergedOpts;
 
    let salesHistoryItems = [];
    let currentDataItems = [];
@@ -128,10 +127,11 @@ export async function getCraftableItemsMarketData
       { progressBar: progressBar, progressText: progressText }
    );
 
-   console.log( "Calculating prices..." );
-
-   craftableItems.forEach( item =>
+   craftableItems.forEach( ( item, index ) =>
    {
+      updateProgress( progressText, progressBar, index, craftableItems.length,
+         `Calculating prices...(${ index }/${ craftableItems.length })` );
+
       const itemData = salesHistoryData.items[ `${ item.id }` ];
       // Only calculate average if there are entries
       if ( itemData?.entries.length > 0 )
@@ -184,6 +184,8 @@ export async function getCraftableItemsMarketData
          item.profitabilityScore = null;
       }
    } );
+
+   updateProgress( progressText, progressBar, 1, 1, "" );
 
    craftableItems
       .sort( ( a, b ) => b.profitabilityScore - a.profitabilityScore );

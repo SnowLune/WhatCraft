@@ -39,6 +39,7 @@ export function downloadFile ( rawData, filename, type )
    const blob = new Blob( [ data ], { type: type } );
 
    const downloadLink = document.createElement( 'a' );
+   downloadLink.style.display = "none";
    downloadLink.href = URL.createObjectURL( blob );
    downloadLink.download = filename;
 
@@ -47,13 +48,17 @@ export function downloadFile ( rawData, filename, type )
    document.body.removeChild( downloadLink );
 }
 
-export function updateProgressText ( progressTextEl, text )
+export function updateProgress
+   ( progressTextEl, progressBarEl, current, max, text )
 {
-   progressTextEl.textContent = `${ text }`;
-}
-
-export function updateProgressBar ( progressBarEl, current, max )
-{
-   progressBarEl.setAttribute( "max", max );
-   progressBarEl.setAttribute( "value", current );
+   if ( progressTextEl
+      && ( text !== undefined && text !== progressTextEl.textContent ) )
+      progressTextEl.textContent = `${ text }`;
+   if ( progressBarEl )
+   {
+      if ( max )
+         progressBarEl.setAttribute( "max", max );
+      if ( current !== undefined )
+         progressBarEl.setAttribute( "value", current );
+   }
 }

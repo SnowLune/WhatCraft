@@ -1,7 +1,7 @@
 import craftableItem from "./craftableItem.js";
 import { getCraftableItemsMarketData } from "./marketData.js";
 import { universalis, xivapi } from "./apiService.js";
-import { raw2Clean, downloadFile } from "./helpers.js";
+import { raw2Clean, downloadFile, updateProgress } from "./helpers.js";
 import { userData, saveData } from "./user.js";
 
 const minLevel = 1;
@@ -96,13 +96,14 @@ inputFormEl.addEventListener( "submit", async ( event ) =>
    const userData = collectFormData();
 
    const rawItemsData = await xivapi.getCraftableItems(
-      userData.classJobID, userData.classJobLevel );
+      userData.classJobID, userData.classJobLevel,
+      { progressBar: progressBarEl, progressText: loadTextEl } );
    const itemsData = raw2Clean( rawItemsData );
    const itemsMarketData = await getCraftableItemsMarketData(
-      itemsData, userData.worldID, 1,
+      itemsData, userData.worldID,
       { progressBar: progressBarEl, progressText: loadTextEl } );
 
-   console.log( "Done." );
+   updateProgress( loadTextEl, progressBarEl, 1, 1, "Done." );
 
    saveData( userData, itemsMarketData );
    downloadBtnEl.disabled = false;

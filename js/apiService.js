@@ -1,4 +1,4 @@
-import { updateProgressBar, updateProgressText } from "./helpers.js";
+import { updateProgress } from "./helpers.js";
 
 export const universalis = {
 
@@ -20,9 +20,9 @@ export const universalis = {
       for ( let i = 0; i < itemTotal; i += maxIDs )
       {
          // Progress bar
-         updateProgressText( progressText,
+         updateProgress( progressText, progressBar, i, itemTotal,
             `Fetching item market data...(${ i }/${ itemTotal })` );
-         updateProgressBar( progressBar, i, itemTotal );
+
          let itemIDsChunk = itemIDs.slice( i, i + maxIDs );
          let chunkURL = url.replace( "{itemIDs}", itemIDsChunk.join( "," ) );
          const res = await fetch( chunkURL );
@@ -31,9 +31,8 @@ export const universalis = {
          Object.assign( itemsData.items, await data.items );
       }
       // Done progress
-      updateProgressText( progressText,
+      updateProgress( progressText, progressBar, itemTotal, itemTotal,
          `Fetching item market data...(${ itemTotal }/${ itemTotal })` );
-      updateProgressBar( progressBar, itemTotal, itemTotal );
       return itemsData;
    },
 
@@ -140,8 +139,10 @@ export const xivapi = {
          throw new Error( "Could not get ClassJob from XIVAPI." );
    },
 
-   async getCraftableItems ( classJob, jobLevel )
+   async getCraftableItems ( classJob, jobLevel, options )
    {
+      const { progressBar, progressText } = options;
+
       // Generate the column info for recipe ingredients
       function generateIngredientColString ()
       {
@@ -185,7 +186,8 @@ export const xivapi = {
          `${ "&columns=" }`,
          `${ columns.join( "," ) }` ].join( "" );
 
-      console.log( "Fetching craftable items..." );
+      updateProgress( progressText, progressBar, 0, 1,
+         "Fetching craftable items..." );
 
       const res = await fetch( searchURL );
       const data = await res.json();
@@ -197,11 +199,17 @@ export const xivapi = {
          // Next page to get is 2
          for ( let i = 2; i <= pageTotal; i++ )
          {
+            updateProgress( progressText, progressBar, i, pageTotal,
+               `Fetching craftable items...(${ i }/${ pageTotal })` );
             const res = await fetch( searchURL + `&page=${ i }` );
             const data = await res.json();
             dataPages.push( data );
          }
       }
+
+      updateProgress( progressText, progressBar, pageTotal, pageTotal,
+         `Done. ${ pageTotal }/${ pageTotal }` );
+
       return dataPages;
    }
 };
